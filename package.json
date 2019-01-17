@@ -1,0 +1,17 @@
+{
+    "name": "fightlord-server",
+    "version": "0.0.2",
+    "description": "Fight the lord web-socket app",
+    "author": {
+        "name": "Dorence",
+        "email": "dorencedeng@gmail.com"
+    },
+    "dependencies": {
+        "express": "^4.16.4",
+        "socket.io": "^2.1.1"
+    },
+    "scripts": {
+        "start": "node server.js"
+    },
+    "private": true
+}

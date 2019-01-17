@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, minimum-scale=1.0" name="viewport">
+    <title>HAPPY斗地主</title>
+    <link rel="stylesheet" href="public/bootstrap/bootstrap-3.3.7.min.css">
+    <link rel="stylesheet" href="public/fontawesome/font-awesome-4.7.0.min.css">
+    <link rel="stylesheet" href="public/style.css">
+    <script src="public/jquery/jquery-3.3.1.min.js" type="text/javascript"></script>
+    <script src="public/bootstrap/bootstrap-3.3.7.min.js" type="text/javascript"></script>
+    <script src="socket.io/socket.io.js"></script>
+    <script src="public/rule.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <h4 class="navbar-brand">Happy 斗地主</h4>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false" style="line-height: 30px;padding:0 5px;"><span id="spanOLNum">?</span> 人在线 <b class="caret"></b></a>
+                    <div class="dropdown-menu nba-qiudui">
+                        <div id="divOLName"></div>
+                    </div>
+                </li>
+                <li id="liUserName" style="line-height: 30px;padding: 0 5px;"></li>
+                <li><button id="btnLogout" class="btn btn-sm btn-danger" onclick="CHAT.logout()" style="margin:auto"><i class="fa fa-sign-out"></i>&nbsp;退出</button></li>
+            </ul>
+        </div>
+    </nav>
+    <div id="divLogin" class="container-fluid" hidden>
+        <div class="panel panel-default center-block">
+            <h1 class="text-center">HAPPY 斗地主</h1>
+            <form style="padding: 18px 3px;">
+                <div id="divGroupRoom" class="form-group">
+                    <div class="input-group">
+                        <span id="spanUsr" class="input-group-addon"><i class="fa fa-user-circle-o"></i></span>
+                        <input id="username" type="text" class="form-control" placeholder="名称" name="username" aria-describedby="spanUsr" tabindex="1">
+                    </div>
+                </div>
+                <div id="divGroupRoom" class="form-group">
+                    <div class="input-group">
+                        <span id="spanRoom" class="input-group-addon"><i class="fa fa-home"></i></span>
+                        <input id="iptRoom" type="number" class="form-control" placeholder="房间号" name="gameroom" aria-describedby="spanRoom" tabindex="2" autocomplete="on" value="516">
+                    </div>
+                </div>
+                <div class="center-block" style="width: 75%;">
+                    <button id="btnLogin" class="btn btn-danger btn-block btn-bg"><i class="fa fa-sign-in"></i>&emsp;开&emsp;始</button><br>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="divMainContainer" class="container-fluid" hidden>
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div id="divMainMsg" class="col-lg-8 col-md-7 col-sm-7 col-xs-6">
+                    <p>你现在是 <span id="spanRole"><small>草丛里的提莫</small></span></p>
+                </div>
+                <div id="divMessage" class="message col-lg-4 col-md-5 col-sm-5 col-xs-6"></div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 center-block">D2</div>
+        </div>
+    </div>
+    <footer hidden>
+        <div id="divMyCard" class="btn-group" role="group"> </div>
+        <div class="action btn-group" role="group">
+            <button id="btnDraw" class="btn btn-default" type="button" disabled>准备</button>
+            <button id="btnSub" class="btn btn-success" type="button" disabled>出牌</button>
+        </div>
+    </footer>
+    <script type="text/javascript" src="public/client.js"></script>
+</body>
+
+</html>
