@@ -12,6 +12,8 @@ var game = {
     history: []
 };
 
+console.log($);
+
 (function() {
     var w = window,
         d = document,

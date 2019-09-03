@@ -1,5 +1,5 @@
 "use strict";
-const wsIP = "192.168.137.1";
+const wsIP = "127.0.0.1";
 
 var express = require("express");
 var app = express();
@@ -33,10 +33,7 @@ var styles = {
     "yellowBG": ["\x1B[43m", "\x1B[49m"]
 };
 
-app.get("/", function(req, res) {
-    //res.send("<h1>Welcome Realtime Server</h1>");
-    res.sendFile(__dirname + "/index.html");
-});
+app.get("/", function(req, res) { res.sendFile(__dirname + "/index.html"); });
 app.use("/public", express.static(__dirname + "/public")); //设置文件目录
 
 function Player(id, name, room, socket, state) {

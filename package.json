@@ -1,7 +1,7 @@
 {
-    "name": "fightlord-server",
+    "name": "fightlandlord-server",
     "version": "0.0.2",
-    "description": "Fight the lord web-socket app",
+    "description": "Fight the land lord web-socket app",
     "author": {
         "name": "Dorence",
         "email": "dorencedeng@gmail.com"
