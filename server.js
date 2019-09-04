@@ -36,14 +36,33 @@ var styles = {
 app.get("/", function(req, res) { res.sendFile(__dirname + "/index.html"); });
 app.use("/public", express.static(__dirname + "/public")); //设置文件目录
 
-function Player(id, name, room, socket, state) {
-    this.id = id; // player id === socket name
-    this.name = name; // player name
-    this.room = room; // room name
-    this.sid = socket; // socket id
-    this.state = state; // user state
+/**
+ * create a game player
+ * @param {String} name player name
+ * @param {Number} room room name
+ * @param {String} socketName socket name
+ * @param {String} socketID  socket id
+ * @param {String} state user state
+ */
+function Player(name, room, socketName, socketID, state) {
+    this.name = name;
+    this.room = room;
+    this.socket = socketName;
+    this.sid = socketID;
+    this.state = state;
     this.pid = -1; // playing_card id
-    this.cards = [];
+    this.cards = new Array;
+}
+
+/**
+ * create a game room
+ * @param {Number} owner player's index in allUser
+ */
+function Room(owner) {
+    this.owner = owner;
+    this.state = "prepare";
+    this.player = new Array;
+    this.watcher = new Array;
 }
 
 let allUser = [],
@@ -84,7 +103,7 @@ function isOnline(index) {
 function Role(pid) {
     this.id = pid;
     if (pid < 0) {
-        this.text = F.randomElement(F.lang.roleName.watcher);
+        this.text = util.randomElement(F.lang.roleName.watcher);
     } else {
         this.text = F.lang.roleName.player[pid];
     }
@@ -155,11 +174,12 @@ function sendDrawCard(index, card) {
     if (allUser[index]) {
         if (typeof card === "undefined") {
             io.sockets.to(allUser[index].sid).emit("drawcard", { id: allUser[index].pid, cards: allUser[index].cards });
-        } else if (Array.isArray(card)) {
+        } else if (util.isArray(card)) {
             io.sockets.to(allUser[index].sid).emit("drawcard", { id: allUser[index].pid, cards: allUser[index].cards = card });
         }
     }
 }
+
 
 io.on("connection", function(socket) {
     console.log(styles.green("NewCon  ::"), "ID " + socket.id);
@@ -177,8 +197,9 @@ io.on("connection", function(socket) {
             deleteFromRoom(found, obj.room);
             delete allUser[found];
         }
+
         // create player
-        allUser.push(new Player(obj.id, obj.name, obj.room, socket.id, ""));
+        allUser.push(new Player(obj.name, obj.room, socket.name, socket.id, ""));
         let p = allUser.length - 1;
 
         if (room.hasOwnProperty(obj.room)) {
@@ -207,19 +228,14 @@ io.on("connection", function(socket) {
             }
         } else {
             //create a new room
-            room[obj.room] = {
-                owner: p,
-                player: [],
-                watcher: [],
-                state: "prepare"
-            };
+            room[obj.room] = new Room(p);
             allUser[p].state = "prepare";
             console.log(styles.cyan("Room+   ::"), obj.room, obj.name, obj.id);
         }
         sendPID(obj.room, "login", { name: obj.name });
     });
 
-    //listen user reconnect
+    // listen user reconnect
     socket.on("reconn", function(obj) {
         //将用户的唯一标识当作socket的名称，后面用到
         socket.name = obj.id;
@@ -329,7 +345,7 @@ io.on("connection", function(socket) {
                         name: obj.name,
                         pid: obj.pid,
                         remain: allUser[p].cards.length,
-                        passText: F.randomElement(F.lang.passText)
+                        passText: util.randomElement(F.lang.passText)
                     });
                     console.log(styles.bold("Send  ::"), obj.name, obj.name, "Pass");
                 } else {

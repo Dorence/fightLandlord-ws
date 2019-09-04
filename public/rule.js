@@ -1,12 +1,35 @@
 "use strict";
 (function() {
-    var FLL = {};
+    let util = this.util;
+    if (undefined === util) {
+        util = require("./util");
+    }
+
+    function CardCombObj(name = "", minCardNum, maxCardNum, judge) {
+        this._judge = judge || (function() { return null; });
+        this.name = name;
+        this.minLen = minCardNum;
+        this.maxLen = maxCardNum;
+        this.judge = function(arr) {
+            if (!util.isArray(arr) || !util.examNum(arr.length, this.minLen, this.maxLen + 1))
+                return false;
+            else
+                return this._judge(arr);
+        }
+        this.setJudge = function(j) { this._judge = j || (function() { return null; }) };
+    }
+
+    let FLL = {
+        errorCard: "\u2716",
+        CardCombObj: CardCombObj
+    };
+
     /* Do Everything  */
     (function() {
-        FLL.errorCard = "\u2716";
 
         var defaultRule = {
             allCardNum: 54,
+            normCardNum: 52,
             joker: {
                 num: 2,
                 symbol: [
@@ -14,18 +37,22 @@
                     "<i class='fa fa-steam-square' style='color: red'></i>"
                 ],
                 get: function(cardID) {
-                    cardID = Math.floor(cardID);
-                    const n = defaultRule.normCardNum;
-                    if (!isNaN(cardID) && cardID >= n && cardID < n + this.num) { return cardID - n; } else { return -1; }
+                    cardID = Math.floor(cardID) - defaultRule.normCardNum;
+                    if (util.examNum(cardID, 0, this.num))
+                        return cardID;
+                    else
+                        return -1;
                 }
             },
-            normCardNum: 52,
             rank: {
                 num: 13,
                 symbol: ["3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"],
                 get: function(cardID) {
                     cardID = Math.floor(cardID);
-                    if (!isNaN(cardID) && cardID >= 0 && cardID < defaultRule.normCardNum) { return Math.floor(cardID / 4); } else { return -1; }
+                    if (util.examNum(cardID, 0, defaultRule.normCardNum))
+                        return cardID / 4;
+                    else
+                        return -1;
                 }
             },
             suit: {
@@ -34,7 +61,10 @@
                 symbol: ["\u2663", "\u2666", "\u2665", "\u2660"],
                 get: function(cardID) {
                     cardID = Math.floor(cardID);
-                    if (!isNaN(cardID) && cardID >= 0 && cardID < defaultRule.normCardNum) { return cardID % 4; } else { return -1; }
+                    if (util.examNum(cardID, 0, defaultRule.normCardNum))
+                        return cardID % 4;
+                    else
+                        return -1;
                 }
             },
             player: {
@@ -42,31 +72,32 @@
                 cardEach: 18,
                 cardLord: 0
             },
-            cardCombination: [ //objects{name, minLen, maxLen, judge(arr)}
-                {
-                    name: "single",
-                    minLen: 1,
-                    maxLen: 1,
-                    judge: function(arr) {
-                        if (arr.length < this.minLen || arr.length > this.maxLen) { return false; }
-                        let face = defaultRule.rank.get(arr[0]);
-                        return { name: this.name, ord: 1, value: (face < 0 ? [1, defaultRule.joker.get(arr[0])] : [0, face]) };
-                    }
-                }, //end single
-                {
-                    name: "pair",
-                    minLen: 2,
-                    maxLen: 2,
-                    judge: function(arr) {
-                        if (arr.length < this.minLen || arr.length > this.maxLen) { return false; }
-                        let face = defaultRule.rank.get(arr[0]);
-                        // have joker card
-                        if (face < 0) { return false; }
-                        for (let i = 1; i < arr.length; i++)
-                            if (face !== defaultRule.rank.get(arr[i])) return false;
-                        return { name: this.name, ord: 1, value: [face] };
-                    }
-                }, //end pair
+            //objects{name, minLen, maxLen, judge(arr)}
+            cardCombination: [
+                new FLL.CardCombObj("single", 1, 1, function(arr) {
+                    if (arr.length < this.minLen || arr.length > this.maxLen) return false;
+                    let face = defaultRule.rank.get(arr[0]);
+                    return {
+                        name: this.name,
+                        ord: 1,
+                        value: (face < 0 ? [1, defaultRule.joker.get(arr[0])] : [0, face])
+                    };
+                }), // single
+                new FLL.CardCombObj("pair", 2, 2, function(arr) {
+                    if (arr.length < this.minLen || arr.length > this.maxLen) return false;
+                    let face = defaultRule.rank.get(arr[0]);
+
+                    // have joker card
+                    if (face < 0) return false;
+
+                    for (let i = 1; i < arr.length; i++)
+                        if (face !== defaultRule.rank.get(arr[i])) return false;
+                    return {
+                        name: this.name,
+                        ord: 1,
+                        value: [face]
+                    };
+                }), // pair
                 {
                     name: "triplet",
                     minLen: 3,
@@ -101,7 +132,7 @@
                             i;
                         for (i = 0; i < arr.length; i++)
                             face.push(defaultRule.rank.get(arr[i]));
-                        face.sort(function(a, b) { return a - b; });
+                        face.sort(util.cmp);
                         //是否有非普通牌(Joker...)
                         if (face[0] < 0) { return false; }
                         for (i = 1; i < face.length; i++) {
@@ -238,7 +269,7 @@
                         if (face[3][face[3].length - 1] > 11) { return false; }
 
                         // 现在只需3张的成连子就行
-                        if (!FLL.isSeries(face[3])) { return false; }
+                        if (!util.isSeries(face[3])) { return false; }
 
                         return {
                             name: this.name,
@@ -256,8 +287,10 @@
              * @param {cardComb} b 
              */
             compare: function(a, b) {
-                function B(x) { return x ? 1 : 0; }
-                if (a.ord !== b.ord) { return B(a.ord > b.ord); } else {
+                const B = util.bool;
+                if (a.ord !== b.ord) {
+                    return util.bool(a.ord > b.ord);
+                } else {
                     if (a.name === b.name) {
                         switch (a.name) {
                             case "single":
@@ -289,35 +322,22 @@
                         "[北]对家",
                         "[西]上家"
                     ],
-                    watcher: ["观战者", "吃瓜群众", "和平观察员", "战争观察员", "联合国特派观察员", "暗中观察者"]
+                    watcher: ["观战者",
+                        "吃瓜群众",
+                        "和平观察员",
+                        "战争观察员",
+                        "联合国特派观察员",
+                        "暗中观察者"
+                    ]
                 }
             }
         };
 
-        FLL.randomElement = function(arr) {
-            const len = arr.length;
-            if (len) { return arr[Math.floor(len * Math.random())]; } else { return ""; }
-        };
-
-        FLL.isSeries = function(arr) {
-            if (!Array.isArray(arr) || arr.length <= 1) { return false; }
-            let i, tmp = arr;
-            tmp.sort(function(a, b) { return a - b; });
-            for (i = 1; i < tmp.length; i++)
-                if (tmp[i] !== tmp[i - 1] + 1) return false;
-            return true;
-        };
-
-        // generate a random array of [0,cardNum)
+        // generate a random array of [0, cardNum)
         FLL.genCard = function(cardNum) {
-            let i, x, tmp, card = [];
-            for (i = 0; i < cardNum; i++) { card[i] = i; }
-            for (i = cardNum - 1; i >= 0; i--) {
-                x = Math.floor(Math.random() * cardNum);
-                tmp = card[x];
-                card[x] = card[i];
-                card[i] = tmp;
-            }
+            let card = [];
+            for (let i = 0; i < cardNum; i++) { card[i] = i; }
+            util.shuffle(card);
             return card;
         };
 
@@ -326,11 +346,11 @@
                 ret = [];
             for (let i = 0; i < this.player.num; i++) {
                 if (card.length) {
-                    ret.push(card.splice(0, this.player.cardEach).sort(function(a, b) { return a - b; }));
+                    ret.push(card.splice(0, this.player.cardEach).sort(util.cmp));
                 }
             }
             if (this.player.cardLord && card.length) {
-                ret.push(card.splice(0, this.player.cardLord).sort(function(a, b) { return a - b; }));
+                ret.push(card.splice(0, this.player.cardLord).sort(util.cmp));
             }
             return ret;
         };
@@ -350,19 +370,16 @@
         };
 
         FLL.valid = function(arr) {
-            let cc = this.cardCombination,
-                j;
-            for (let i = 0; i < cc.length; i++) {
-                j = cc[i].judge(arr);
-                if (j) { return j; }
+            for (let it of this.cardCombination) {
+                let x = it.judge(arr);
+                if (x) { return x; }
             }
             return false;
         };
 
-        FLL.init = function(rule) {
-            rule = rule || defaultRule;
-            for (let i in rule) { FLL[i] = rule[i]; }
-            return;
+        FLL.init = function(rule = defaultRule) {
+            FLL = Object.assign(FLL, rule);
+            return FLL;
         };
 
         FLL.init();
